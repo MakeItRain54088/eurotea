@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title>EuroTea - Shop</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+	<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+		<div class="container">
+			<a class="navbar-brand" href="/shop"><b>EuroTea</b></a>
+			<div class="navbar-nav ms-auto align-items-center">
+				<a class="nav-link active me-2" href="/shop">Shop</a>
+				<a class="nav-link me-3" href="#">Cart (0)</a>
+
+				<a th:if="${userRole == null}" class="btn btn-outline-light btn-sm me-2 text-white px-3" href="/login">Login</a>
+				<a th:if="${userRole == null}" class="btn btn-primary btn-sm text-white px-3" href="/register">B2B Register</a>
+
+				<span th:if="${userRole != null}" class="navbar-text text-white me-3 small">
+					Welcome, <strong th:text="${companyName != null ? companyName : 'Admin'}">Company</strong>
+
+					<span th:if="${userStatus == 'PENDING'}" class="badge bg-warning text-dark ms-1">Pending Review</span>
+					<span th:if="${userStatus == 'APPROVED'}" class="badge bg-success ms-1">Verified B2B</span>
+				</span>
+				<a th:if="${userRole != null}" class="btn btn-danger btn-sm text-white px-3" href="/logout">Logout</a>
+			</div>
+		</div>
+	</nav>
+
+	<div class="container my-5">
+		<h2 class="mb-4 text-center">Our Premium Taiwanese Tea</h2>
+
+		<div class="row">
+			<div class="col-md-4 mb-4" th:each="product : ${products}">
+				<div class="card h-100 shadow-sm">
+					<div class="card-body text-center d-flex flex-column">
+
+						<h5 class="card-title fw-bold" th:text="${product.name}">Tea Name</h5>
+						<p class="text-muted small flex-grow-1" th:text="${product.description}">Description</p>
+
+						<div class="my-3">
+							<div th:if="${userStatus == 'APPROVED'}">
+								<span class="text-decoration-line-through text-muted small" th:text="'€ ' + ${product.price}">€
+									0.00</span>
+								<h4 class="text-success fw-bold mt-1" th:text="'€ ' + ${product.wholesalePrice} + ' (Wholesale)'">€ 0.00
+								</h4>
+							</div>
+
+							<div th:if="${userStatus != 'APPROVED'}">
+								<h4 class="text-success" th:text="'€ ' + ${product.price}">€ 0.00</h4>
+
+								<small th:if="${userStatus == 'PENDING'}" class="text-warning d-block mt-1">🔒 Wholesale price unlocked
+									after approval</small>
+								<small th:if="${userRole == null}" class="text-muted d-block mt-1">Log in as verified business for
+									wholesale rates</small>
+							</div>
+						</div>
+
+						<div class="mt-auto">
+							<p class="card-text mb-3">Stock Level: <span class="fw-bold" th:text="${product.stockLevel}">0</span> kg
+							</p>
+
+							<button class="btn btn-primary w-100" th:disabled="${product.stockLevel <= 0}">Add to Cart</button>
+						</div>
+
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</body>
+
+</html>
