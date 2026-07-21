@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.servlet.http.HttpSession;
+
 @Controller
 public class RegisterController {
 
@@ -27,9 +29,19 @@ public class RegisterController {
     public String handleRegister(@RequestParam("email") String email,
                                  @RequestParam("password") String password,
                                  @RequestParam("companyName") String companyName,
-                                 @RequestParam("document") MultipartFile documentFile) {
-        
-        // 1. Create a brand new User object and fill in the details from the webpage
+                                 @RequestParam(value = "document", required = false) MultipartFile documentFile,
+                                 HttpSession session) {
+
+        System.out.println("====== [DEBUG] Registration Attempt Received ======");
+        System.out.println("Email: " + email + " | Company: " + companyName);
+
+        // 1. Block reserving admin email as regular B2B account
+        if ("admin@eurotea.com".equalsIgnoreCase(email)) {
+            System.out.println("====== [DEBUG] Blocked attempt to register with admin email! ======");
+            return "redirect:/register?error=adminEmail";
+        }
+
+        // 2. Create a brand new User object and fill in the details from the webpage
         User newUser = new User();
         newUser.setEmail(email);
         newUser.setPassword(password);
@@ -38,42 +50,46 @@ public class RegisterController {
         // Every new B2B registration starts as 'PENDING' because admin needs to review the file first
         newUser.setStatus("PENDING"); 
 
-        // 2. Handle the file upload logic (PDF or image trade licenses)
-        if (!documentFile.isEmpty()) {
+        // 3. Handle the file upload logic (PDF or image trade licenses)
+        if (documentFile != null && !documentFile.isEmpty()) {
             try {
-                // FILE STORAGE PATH NOTE: 
-                // Saving files inside a local "uploaded-docs" folder on the server.
-                // Doing it this way because it is simple and works perfectly for testing and school demo.
                 String uploadDirectory = System.getProperty("user.dir") + "/uploaded-docs/";
                 
-                // Create the folder automatically if it doesn't exist yet to prevent crashes
                 File dir = new File(uploadDirectory);
                 if (!dir.exists()) {
                     dir.mkdirs();
                 }
 
-                // Give the file a unique name using system time so files don't overwrite each other
                 String originalFileName = documentFile.getOriginalFilename();
                 String savedFileName = System.currentTimeMillis() + "_" + originalFileName;
                 
-                // Save the file on the computer hard drive
                 File destinationFile = new File(uploadDirectory + savedFileName);
                 documentFile.transferTo(destinationFile);
 
-                // Save the file path string into the user object so we can read it later in MySQL
                 newUser.setDocumentPath("/uploaded-docs/" + savedFileName);
+                System.out.println("====== [DEBUG] Document uploaded successfully: " + savedFileName);
 
             } catch (IOException e) {
+                System.out.println("====== [DEBUG] Document upload failed! ======");
                 e.printStackTrace();
-                // If file save fails, redirect back with a file error flag in the URL
                 return "redirect:/register?fileError";
             }
+        } else {
+            System.out.println("====== [DEBUG] No document attached or file was empty.");
         }
 
-        // 3. Save our complete new user into MySQL database
-        userRepository.save(newUser);
+        // 4. Save our complete new user into MySQL database
+        User savedUser = userRepository.save(newUser);
+        System.out.println("====== [DEBUG] SUCCESS! User saved with ID: " + savedUser.getId() + " ======");
 
-        // Registration done! Send them to login page and show a success notice
-        return "redirect:/login?registered";
+        // 5. AUTO-LOGIN LOGIC:
+        // Automatically save user profile into HTTP session so the user stays logged in immediately
+        session.setAttribute("userRole", "B2B");
+        session.setAttribute("userStatus", savedUser.getStatus()); // 'PENDING' status
+        session.setAttribute("companyName", savedUser.getCompanyName());
+        session.setAttribute("userId", savedUser.getId());
+
+        // Redirect straight to the shop homepage instead of forcing them to log in again
+        return "redirect:/shop";
     }
 }

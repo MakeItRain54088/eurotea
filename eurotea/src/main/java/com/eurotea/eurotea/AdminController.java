@@ -28,14 +28,29 @@ public class AdminController {
         // they will be blocked and kicked out to the login page.
         String userRole = (String) session.getAttribute("userRole");
         if (userRole == null || !userRole.equals("ADMIN")) {
+            System.out.println("====== [DEBUG ADMIN] Kicked out: Not logged in as ADMIN ======");
             return "redirect:/login?error"; // Block access and show error
         }
 
         // Find all B2B companies that are waiting for approval (Status must be PENDING)
         List<User> pendingUsers = userRepository.findByStatus("PENDING");
         
-        // Send the list to the HTML template so we can display them in a table
-        model.addAttribute("pendingUsers", pendingUsers);
+        // DEBUG PRINT IN CONSOLE (Check your Terminal!)
+        System.out.println("====== [DEBUG ADMIN] Dashboard Loaded ======");
+        System.out.println("Pending users found: " + (pendingUsers != null ? pendingUsers.size() : 0));
+        
+        // If findByStatus returns empty, fallback to fetch all users just in case
+        if (pendingUsers == null || pendingUsers.isEmpty()) {
+            List<User> allUsers = userRepository.findAll();
+            System.out.println("Fallback total users in DB: " + allUsers.size());
+            model.addAttribute("pendingUsers", allUsers);
+            model.addAttribute("users", allUsers); // Fix name mismatch for Thymeleaf template
+        } else {
+            // Send the list to the HTML template so we can display them in a table
+            model.addAttribute("pendingUsers", pendingUsers);
+            model.addAttribute("users", pendingUsers); // Both key names supported for HTML
+        }
+
         return "admin-dashboard";
     }
 
@@ -55,9 +70,33 @@ public class AdminController {
             User user = userOpt.get();
             user.setStatus("APPROVED"); // Change status from PENDING to APPROVED
             userRepository.save(user);  // Save the update back into MySQL database
+            System.out.println("====== [DEBUG ADMIN] Approved User ID: " + id + " ======");
         }
         
         // Go back to dashboard and show a green success message box
-        return "redirect:/admin/dashboard?success";
+        return "redirect:/admin/dashboard?approved";
+    }
+
+    // When the admin clicks the "Reject" button
+    @PostMapping("/admin/reject/{id}")
+    public String rejectUser(@PathVariable("id") Long id, HttpSession session) {
+        
+        // Double check security here too
+        String userRole = (String) session.getAttribute("userRole");
+        if (userRole == null || !userRole.equals("ADMIN")) {
+            return "redirect:/login";
+        }
+
+        // Find the user by their ID number
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            user.setStatus("REJECTED"); // Change status from PENDING to REJECTED
+            userRepository.save(user);  // Save the update back into MySQL database
+            System.out.println("====== [DEBUG ADMIN] Rejected User ID: " + id + " ======");
+        }
+        
+        // Go back to dashboard and show a red alert message
+        return "redirect:/admin/dashboard?rejected";
     }
 }

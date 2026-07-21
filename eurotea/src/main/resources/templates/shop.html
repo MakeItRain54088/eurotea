@@ -9,31 +9,41 @@
 
 <body class="bg-light">
 
+	<!-- MAIN NAVIGATION BAR -->
 	<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
 		<div class="container">
 			<a class="navbar-brand" href="/shop"><b>EuroTea</b></a>
 			<div class="navbar-nav ms-auto align-items-center">
 				<a class="nav-link active me-2" href="/shop">Shop</a>
-				<a class="nav-link me-3" href="#">Cart (0)</a>
+				<a class="nav-link me-3" href="/cart">
+					Cart (<span th:text="${session.cart != null ? session.cart.size() : 0}">0</span>)
+				</a>
 
-				<a th:if="${userRole == null}" class="btn btn-outline-light btn-sm me-2 text-white px-3" href="/login">Login</a>
-				<a th:if="${userRole == null}" class="btn btn-primary btn-sm text-white px-3" href="/register">B2B Register</a>
+				<!-- 1. VISITORS NOT LOGGED IN: session.userRole is null -->
+				<a th:if="${session.userRole == null}" class="btn btn-outline-light btn-sm me-2 text-white px-3"
+					href="/login">Login</a>
+				<a th:if="${session.userRole == null}" class="btn btn-primary btn-sm text-white px-3" href="/register">B2B
+					Register</a>
 
-				<span th:if="${userRole != null}" class="navbar-text text-white me-3 small">
-					Welcome, <strong th:text="${companyName != null ? companyName : 'Admin'}">Company</strong>
+				<!-- 2. LOGGED IN USERS OR ADMIN: session.userRole is NOT null -->
+				<span th:if="${session.userRole != null}" class="navbar-text text-white me-3 small">
+					Welcome, <strong th:text="${session.companyName != null ? session.companyName : 'Admin'}">Company</strong>
 
-					<span th:if="${userStatus == 'PENDING'}" class="badge bg-warning text-dark ms-1">Pending Review</span>
-					<span th:if="${userStatus == 'APPROVED'}" class="badge bg-success ms-1">Verified B2B</span>
+					<!-- Show badges based on session.userStatus -->
+					<span th:if="${session.userStatus == 'PENDING'}" class="badge bg-warning text-dark ms-1">Pending Review</span>
+					<span th:if="${session.userStatus == 'APPROVED'}" class="badge bg-success ms-1">Verified B2B</span>
 				</span>
-				<a th:if="${userRole != null}" class="btn btn-danger btn-sm text-white px-3" href="/logout">Logout</a>
+				<a th:if="${session.userRole != null}" class="btn btn-danger btn-sm text-white px-3" href="/logout">Logout</a>
 			</div>
 		</div>
 	</nav>
 
+	<!-- PRODUCTS DISPLAY AREA -->
 	<div class="container my-5">
 		<h2 class="mb-4 text-center">Our Premium Taiwanese Tea</h2>
 
 		<div class="row">
+			<!-- Loop through all products sent from the controller -->
 			<div class="col-md-4 mb-4" th:each="product : ${products}">
 				<div class="card h-100 shadow-sm">
 					<div class="card-body text-center d-flex flex-column">
@@ -41,36 +51,42 @@
 						<h5 class="card-title fw-bold" th:text="${product.name}">Tea Name</h5>
 						<p class="text-muted small flex-grow-1" th:text="${product.description}">Description</p>
 
+						<!-- DYNAMIC PRICING LOGIC BASED ON SESSION -->
 						<div class="my-3">
-							<div th:if="${userStatus == 'APPROVED'}">
+							<!-- CASE 1: Verified B2B user -> Wholesale price -->
+							<div th:if="${session.userStatus == 'APPROVED'}">
 								<span class="text-decoration-line-through text-muted small" th:text="'€ ' + ${product.price}">€
 									0.00</span>
 								<h4 class="text-success fw-bold mt-1" th:text="'€ ' + ${product.wholesalePrice} + ' (Wholesale)'">€ 0.00
 								</h4>
 							</div>
 
-							<div th:if="${userStatus != 'APPROVED'}">
+							<!-- CASE 2: Normal user / Guest / PENDING B2B -> Standard price -->
+							<div th:if="${session.userStatus != 'APPROVED'}">
 								<h4 class="text-success" th:text="'€ ' + ${product.price}">€ 0.00</h4>
 
-								<small th:if="${userStatus == 'PENDING'}" class="text-warning d-block mt-1">🔒 Wholesale price unlocked
-									after approval</small>
-								<small th:if="${userRole == null}" class="text-muted d-block mt-1">Log in as verified business for
-									wholesale rates</small>
+								<small th:if="${session.userStatus == 'PENDING'}" class="text-warning d-block mt-1">🔒 Wholesale price
+									unlocked after approval</small>
+								<small th:if="${session.userRole == null}" class="text-muted d-block mt-1">Log in as verified business
+									for wholesale rates</small>
 							</div>
 						</div>
 
+						<!-- STOCK & BUTTON -->
 						<div class="mt-auto">
 							<p class="card-text mb-3">Stock Level: <span class="fw-bold" th:text="${product.stockLevel}">0</span> kg
 							</p>
+							<form action="/cart/add" method="post">
+								<input type="hidden" name="productId" th:value="${product.id}" />
+								<button type="submit" class="btn btn-primary w-100" th:disabled="${product.stockLevel <= 0}">Add to
+									Cart</button>
+							</form>
 
-							<button class="btn btn-primary w-100" th:disabled="${product.stockLevel <= 0}">Add to Cart</button>
 						</div>
-
 					</div>
 				</div>
 			</div>
 		</div>
-	</div>
 
 </body>
 
