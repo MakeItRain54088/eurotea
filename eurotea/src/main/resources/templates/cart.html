@@ -10,27 +10,11 @@
 <body class="bg-light">
 
 	<!-- NAVIGATION BAR -->
-	<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-		<div class="container">
-			<a class="navbar-brand" href="/shop"><b>EuroTea</b></a>
-			<div class="navbar-nav ms-auto align-items-center">
-				<a class="nav-link me-2" href="/shop">Shop</a>
-				<a class="nav-link active me-3" href="/cart">
-					Cart (<span th:text="${session.cart != null ? session.cart.size() : 0}">0</span>)
-				</a>
-			</div>
-		</div>
-	</nav>
+	<nav th:replace="~{fragments :: navbar('cart')}"></nav>
 
 	<div class="container my-5" style="max-width: 800px;">
 
 		<h2 class="mb-4 text-center fw-bold">Your Tea Cart</h2>
-
-		<!-- CHECKOUT SUCCESS ALERT -->
-		<div th:if="${param.success}" class="alert alert-success alert-dismissible fade show" role="alert">
-			<strong>Order Placed Successfully!</strong> Thank you for buying with EuroTea. A confirmation email has been sent.
-			<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-		</div>
 
 		<div class="card shadow-sm">
 			<div class="card-body p-4">
@@ -50,15 +34,31 @@
 								<th class="text-center">Unit Price</th>
 								<th class="text-center">Quantity (kg)</th>
 								<th class="text-end">Subtotal</th>
+								<th></th>
 							</tr>
 						</thead>
 						<tbody>
 							<tr th:each="item : ${cartItems}">
 								<td class="fw-bold" th:text="${item.productName}">Tea Name</td>
-								<td class="text-center" th:text="'€ ' + ${item.priceUsed}">€ 0.00</td>
-								<td class="text-center" th:text="${item.quantity}">1</td>
+								<td class="text-center" th:text="'€ ' + ${item.price}">€ 0.00</td>
+								<td class="text-center" style="width: 220px;">
+									<!-- min="1" is just a UI hint, setting qty to 0 removes the line server-side -->
+									<form th:action="@{/cart/update}" method="post"
+										class="d-flex justify-content-center align-items-center gap-2">
+										<input type="hidden" name="productId" th:value="${item.productId}" />
+										<input type="number" name="quantity" th:value="${item.quantity}" min="1"
+											class="form-control form-control-sm text-center" style="width: 70px;" />
+										<button type="submit" class="btn btn-outline-secondary btn-sm">Update</button>
+									</form>
+								</td>
 								<td class="text-end fw-bold text-success"
 									th:text="'€ ' + ${#numbers.formatDecimal(item.subtotal, 1, 2)}">€ 0.00</td>
+								<td class="text-end">
+									<form th:action="@{/cart/remove}" method="post">
+										<input type="hidden" name="productId" th:value="${item.productId}" />
+										<button type="submit" class="btn btn-outline-danger btn-sm">Remove</button>
+									</form>
+								</td>
 							</tr>
 						</tbody>
 					</table>
@@ -71,10 +71,7 @@
 						</h3>
 					</div>
 
-					<!-- SIMULATED CHECKOUT FORM -->
-					<form action="/cart/checkout" method="post">
-						<button type="submit" class="btn btn-success btn-lg w-100 fw-bold">Proceed to Checkout (Demo)</button>
-					</form>
+					<a href="/checkout" class="btn btn-success btn-lg">Proceed to Checkout ➔</a>
 				</div>
 
 			</div>

@@ -2,9 +2,13 @@ package com.eurotea.eurotea;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -14,6 +18,10 @@ import jakarta.servlet.http.HttpSession;
 
 @Controller
 public class RegisterController {
+
+    // Only these document types are accepted, matching the "accept" attribute on the upload form.
+    // Enforced here too since the HTML attribute alone can be bypassed (e.g. via curl/Postman).
+    private static final List<String> ALLOWED_EXTENSIONS = Arrays.asList("pdf", "png", "jpg", "jpeg");
 
     @Autowired
     private UserRepository userRepository;
@@ -52,18 +60,32 @@ public class RegisterController {
 
         // 3. Handle the file upload logic (PDF or image trade licenses)
         if (documentFile != null && !documentFile.isEmpty()) {
+
+            // Only trust the extension of the ORIGINAL filename for validation purposes;
+            // the actual saved filename is always generated server-side (see below) so
+            // nothing from the client ever reaches the filesystem path.
+            String originalFileName = StringUtils.getFilename(documentFile.getOriginalFilename());
+            String extension = StringUtils.getFilenameExtension(originalFileName);
+
+            if (extension == null || !ALLOWED_EXTENSIONS.contains(extension.toLowerCase())) {
+                System.out.println("====== [DEBUG] Rejected upload with disallowed file type: " + originalFileName);
+                return "redirect:/register?fileError";
+            }
+
             try {
                 String uploadDirectory = System.getProperty("user.dir") + "/uploaded-docs/";
-                
+
                 File dir = new File(uploadDirectory);
                 if (!dir.exists()) {
                     dir.mkdirs();
                 }
 
-                String originalFileName = documentFile.getOriginalFilename();
-                String savedFileName = System.currentTimeMillis() + "_" + originalFileName;
-                
-                File destinationFile = new File(uploadDirectory + savedFileName);
+                // Generate a brand new random filename instead of reusing anything from the
+                // client. This closes off path traversal (e.g. "../../evil.pdf") since the
+                // client-supplied name never touches the destination path.
+                String savedFileName = UUID.randomUUID() + "." + extension.toLowerCase();
+
+                File destinationFile = new File(dir, savedFileName);
                 documentFile.transferTo(destinationFile);
 
                 newUser.setDocumentPath("/uploaded-docs/" + savedFileName);
@@ -88,6 +110,7 @@ public class RegisterController {
         session.setAttribute("userStatus", savedUser.getStatus()); // 'PENDING' status
         session.setAttribute("companyName", savedUser.getCompanyName());
         session.setAttribute("userId", savedUser.getId());
+        session.setAttribute("userEmail", savedUser.getEmail());
 
         // Redirect straight to the shop homepage instead of forcing them to log in again
         return "redirect:/shop";

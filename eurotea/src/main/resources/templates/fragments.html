@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+	<!-- Shared navbar used by every page. Usage: <nav th:replace="~{fragments :: navbar('shop')}"></nav>
+		 the param just controls which link gets the "active" style -->
+	<nav th:fragment="navbar(active)" class="navbar navbar-expand-lg navbar-dark bg-dark">
+		<div class="container">
+			<a class="navbar-brand" href="/shop"><b>EuroTea</b></a>
+			<div class="navbar-nav ms-auto align-items-center">
+				<a class="nav-link me-2" th:classappend="${active == 'shop'} ? 'active'" href="/shop">Shop</a>
+				<a class="nav-link me-3" th:classappend="${active == 'cart'} ? 'active'" href="/cart">
+					Cart (<span th:text="${session.cart != null ? session.cart.size() : 0}">0</span>)
+				</a>
+
+				<!-- Guest state -->
+				<th:block th:if="${session.userRole == null or session.userRole == ''}">
+					<a class="btn btn-outline-light btn-sm me-2 text-white px-3" href="/login">Login</a>
+					<a class="btn btn-primary btn-sm text-white px-3" href="/register">B2B Register</a>
+				</th:block>
+
+				<!-- Logged-in state (admin or B2B company) -->
+				<th:block th:if="${session.userRole != null and session.userRole != ''}">
+					<span class="navbar-text text-white me-3 small">
+						Welcome, <strong th:text="${session.companyName != null ? session.companyName : 'User'}">User</strong>
+						<span th:if="${session.userStatus == 'PENDING'}" class="badge bg-warning text-dark ms-1">Pending
+							Review</span>
+						<span th:if="${session.userStatus == 'APPROVED'}" class="badge bg-success ms-1">Verified B2B</span>
+					</span>
+					<a class="btn btn-danger btn-sm text-white px-3" href="/logout">Logout</a>
+				</th:block>
+			</div>
+		</div>
+	</nav>
+
+</body>
+</html>

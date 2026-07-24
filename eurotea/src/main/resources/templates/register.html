@@ -9,6 +9,8 @@
 
 <body class="bg-light">
 
+	<nav th:replace="~{fragments :: navbar('register')}"></nav>
+
 	<div class="container my-5" style="max-width: 550px;">
 		<div class="card shadow-sm">
 			<div class="card-body p-4">
@@ -25,6 +27,7 @@
 
 				<!-- B2B REGISTRATION FORM -->
 				<!-- enctype="multipart/form-data" IS CRITICAL FOR FILE UPLOADS TO WORK! -->
+				<!-- submits as status PENDING and auto-logs in, admin still has to approve it after -->
 				<form action="/register" method="post" enctype="multipart/form-data">
 
 					<div class="mb-3">

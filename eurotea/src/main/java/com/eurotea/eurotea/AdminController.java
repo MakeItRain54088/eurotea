@@ -40,6 +40,7 @@ public class AdminController {
         System.out.println("Pending users found: " + (pendingUsers != null ? pendingUsers.size() : 0));
         
         // If findByStatus returns empty, fallback to fetch all users just in case
+        // (so the table isn't just blank once everyone's already been approved/rejected)
         if (pendingUsers == null || pendingUsers.isEmpty()) {
             List<User> allUsers = userRepository.findAll();
             System.out.println("Fallback total users in DB: " + allUsers.size());

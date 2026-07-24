@@ -5,7 +5,11 @@ public class CartItem {
 
     private Long productId;
     private String productName;
-    private double priceUsed; // Can be regular price or wholesale price depending on business status
+
+    // price at the time it was added (regular or wholesale, see CartController.addToCart) -
+    // doesn't update itself if the user's B2B status changes after adding
+    private double priceUsed;
+
     private int quantity;
 
     public CartItem(Long productId, String productName, double priceUsed, int quantity) {
@@ -36,6 +40,10 @@ public class CartItem {
 
     public void setProductName(String productName) {
         this.productName = productName;
+    }
+
+    public double getPrice() {
+        return priceUsed;
     }
 
     public double getPriceUsed() {

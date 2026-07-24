@@ -66,18 +66,61 @@ public class CartController {
             session.setAttribute("cart", cart);
         }
 
-        return "redirect:/shop";
+        return "redirect:/cart";
     }
 
-    // Clear cart or simulate checkout
-    @PostMapping("/cart/checkout")
-    public String checkout(HttpSession session) {
-        // Clear cart items from session after successful simulated payment
-        session.removeAttribute("cart");
-        return "redirect:/cart?success";
+    // Update the quantity of an existing cart line
+    @PostMapping("/cart/update")
+    public String updateCartItem(@RequestParam("productId") Long productId,
+                                  @RequestParam("quantity") int quantity,
+                                  HttpSession session) {
+        List<CartItem> cart = getCartFromSession(session);
+
+        // find the matching line first
+        CartItem itemToUpdate = null;
+        for (CartItem item : cart) {
+            if (item.getProductId().equals(productId)) {
+                itemToUpdate = item;
+                break;
+            }
+        }
+
+        if (itemToUpdate != null) {
+            // treat 0 (or negative, in case someone messes with the form) as a remove
+            if (quantity <= 0) {
+                cart.remove(itemToUpdate);
+            } else {
+                itemToUpdate.setQuantity(quantity);
+            }
+        }
+
+        session.setAttribute("cart", cart);
+        return "redirect:/cart";
+    }
+
+    // Remove a single item from the cart entirely
+    @PostMapping("/cart/remove")
+    public String removeFromCart(@RequestParam("productId") Long productId, HttpSession session) {
+        List<CartItem> cart = getCartFromSession(session);
+
+        CartItem itemToRemove = null;
+        for (CartItem item : cart) {
+            if (item.getProductId().equals(productId)) {
+                itemToRemove = item;
+                break;
+            }
+        }
+
+        if (itemToRemove != null) {
+            cart.remove(itemToRemove);
+        }
+
+        session.setAttribute("cart", cart);
+        return "redirect:/cart";
     }
 
     // Helper method to retrieve or initialize cart from session
+    // (no cart table in the DB, it just lives in the session as a plain list)
     @SuppressWarnings("unchecked")
     private List<CartItem> getCartFromSession(HttpSession session) {
         List<CartItem> cart = (List<CartItem>) session.getAttribute("cart");

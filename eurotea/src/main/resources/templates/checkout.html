@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title>EuroTea - Checkout</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+	<nav th:replace="~{fragments :: navbar('cart')}"></nav>
+
+	<div class="container my-5">
+		<a href="/cart" class="text-secondary text-decoration-none small">&larr; Back to Cart</a>
+		<h2 class="mb-4 mt-2">Checkout & Order Confirmation</h2>
+
+		<div class="row">
+			<!-- 配送資訊 Form -->
+			<div class="col-md-7">
+				<div class="card shadow-sm mb-4">
+					<div class="card-header bg-white">
+						<h5 class="mb-0">Shipping & Contact Details</h5>
+					</div>
+					<div class="card-body">
+						<form th:action="@{/checkout/place-order}" method="post">
+							<div class="mb-3">
+								<label class="form-label">Phone Number</label>
+								<input type="tel" name="phone" class="form-control" placeholder="+353 87 123 4567" required>
+							</div>
+							<div class="mb-3">
+								<label class="form-label">Shipping Address</label>
+								<textarea name="shippingAddress" class="form-control" rows="3"
+									placeholder="Enter street address, city, postcode..." required></textarea>
+							</div>
+
+							<div class="mb-3">
+								<label class="form-label">Payment Method</label>
+								<!-- not wired to a real payment processor, just shown as the only option -->
+								<div class="form-check">
+									<input class="form-check-input" type="radio" checked disabled>
+									<label class="form-check-label">B2B Invoice / Bank Transfer (Simulated Payment)</label>
+								</div>
+							</div>
+
+							<button type="submit" class="btn btn-success btn-lg w-100 mt-3">Confirm & Place Order</button>
+						</form>
+					</div>
+				</div>
+			</div>
+
+			<!-- 訂單摘要 -->
+			<div class="col-md-5">
+				<div class="card shadow-sm">
+					<div class="card-header bg-white">
+						<h5 class="mb-0">Order Summary</h5>
+					</div>
+					<div class="card-body p-0">
+						<ul class="list-group list-group-flush">
+							<li th:each="item : ${cartItems}"
+								class="list-group-item d-flex justify-content-between align-items-center">
+								<div>
+									<h6 class="my-0" th:text="${item.productName}">Tea Product</h6>
+									<small class="text-muted"
+										th:text="'Qty: ' + ${item.quantity} + ' x €' + ${#numbers.formatDecimal(item.price, 1, 2)}"></small>
+								</div>
+								<span class="text-muted" th:text="'€' + ${#numbers.formatDecimal(item.subtotal, 1, 2)}">€0.00</span>
+							</li>
+							<li class="list-group-item d-flex justify-content-between bg-light fw-bold fs-5">
+								<span>Total</span>
+								<span class="text-success" th:text="'€' + ${#numbers.formatDecimal(grandTotal, 1, 2)}">€0.00</span>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

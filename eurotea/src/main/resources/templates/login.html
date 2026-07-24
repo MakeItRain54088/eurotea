@@ -9,13 +9,16 @@
 
 <body class="bg-light">
 
+	<nav th:replace="~{fragments :: navbar('login')}"></nav>
+
 	<div class="container my-5" style="max-width: 450px;">
 		<div class="card shadow-sm">
 			<div class="card-body p-4">
 
 				<h3 class="card-title text-center mb-4">EuroTea Login</h3>
 
-				<!-- SUCCESS ALERT: Shown when returning from register page after successful registration -->
+				<!-- SUCCESS ALERT: Shown when returning from register page after successful registration
+					 (not actually linked anywhere right now since register auto-logs you in, but leaving it here) -->
 				<div th:if="${param.registered}" class="alert alert-success alert-dismissible fade show" role="alert">
 					<strong>Registration Successful!</strong> Your B2B account has been created. Our admin team will review your
 					documents shortly. You can now log in.

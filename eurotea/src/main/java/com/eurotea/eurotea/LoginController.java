@@ -38,14 +38,17 @@ public class LoginController {
 
         // B2B USER CHECK:
         // Get all users from the database and check if the email and password match
+        // (yeah, this loads the whole table just to check one login - fine for now)
         List<User> allUsers = userRepository.findAll();
         for (User u : allUsers) {
             if (u.getEmail().equalsIgnoreCase(email) && u.getPassword().equals(password)) {
                 
                 // Save user info into session so other pages know who is logged in
                 session.setAttribute("userRole", "B2B");
-                session.setAttribute("userStatus", u.getStatus()); // This will be 'PENDING' or 'APPROVED'
+                session.setAttribute("userStatus", u.getStatus());
                 session.setAttribute("companyName", u.getCompanyName());
+                session.setAttribute("userId", u.getId());
+                session.setAttribute("userEmail", u.getEmail());
                 
                 return "redirect:/shop"; // Successful login -> go to the main shop page
             }

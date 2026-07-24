@@ -58,7 +58,7 @@
 							<td colspan="6" class="text-center py-4 text-muted">No registered users found in the database.</td>
 						</tr>
 
-						<!-- LOOP THROUGH REGISTERED USERS WITH NULL-SAFE OPERATORS -->
+						<!-- LOOP THROUGH REGISTERED USERS (user?.x = null-safe, just in case) -->
 						<tr th:each="user : ${users}">
 							<td class="ps-4" th:text="${user?.id != null ? user.id : 'N/A'}">1</td>
 							<td class="fw-bold" th:text="${user?.companyName != null ? user.companyName : 'N/A'}">Company Ltd.</td>

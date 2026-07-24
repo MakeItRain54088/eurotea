@@ -20,7 +20,8 @@ public class Product {
     private double price;          // Standard retail price for normal guests
     private double wholesalePrice; // Discounted trade price for verified B2B accounts
     
-    private int stockLevel;        // How many kg of tea we have left in inventory
+    // How many kg of tea we have left in inventory (display only for now, orders don't decrement it)
+    private int stockLevel;
 
     // --- Getters and Setters below ---
 
